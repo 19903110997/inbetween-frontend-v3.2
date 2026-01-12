@@ -293,9 +293,9 @@
         // 1. 配置中心 (支持运行时注入)
         const getApiBase = () => {
             if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__?.API_ORIGIN) {
-                return `${window.__RUNTIME_CONFIG__.API_ORIGIN}/api/session`;
+                return window.__RUNTIME_CONFIG__.API_ORIGIN;  // 
             }
-            return 'https://api.geili.space/api/session';  // 生产后端完整路径
+            return 'https://api.geili.space';  // 
         };
 
         const API_BASE = getApiBase();
