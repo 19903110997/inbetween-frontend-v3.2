@@ -337,7 +337,7 @@
             const mode = state.modes[state.currentModeIndex].value;
 
             try {
-                const res = await fetch(`${API_BASE}/start`, {
+                const res = await fetch(`${API_BASE}/api/session/start`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: state.userId, mode })
@@ -380,7 +380,7 @@
             document.getElementById('chat-phase-indicator').textContent = 'PHASE: TITRATING...';
 
             try {
-                const res = await fetch(`${API_BASE}/message`, {
+                const res = await fetch(`${API_BASE}/api/session/message`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: state.userId, message: text })
@@ -411,7 +411,7 @@
             btn.textContent = "GENERATING...";
             
             try {
-                const res = await fetch(`${API_BASE}/report`, {
+                const res = await fetch(`${API_BASE}/api/session/report`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: state.userId })
