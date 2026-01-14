@@ -293,9 +293,9 @@
         // 1. 配置中心 (支持运行时注入)
         const getApiBase = () => {
             if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__?.API_ORIGIN) {
-            return window.__RUNTIME_CONFIG__.API_ORIGIN;
+                return window.__RUNTIME_CONFIG__.API_ORIGIN;  
             }
-            return 'https://api.geili.space';  // 生产后端
+            return 'https://api.geili.space';  
         };
 
         const API_BASE = getApiBase();
@@ -388,10 +388,13 @@
 
                 const data = await res.json();
 
-                if (data.status === 'METABOLIC_LOCK' || data.meta?.shouldLock) {
-                    showMetabolicLock({ remainingHours: data.meta?.lockDuration || 48, unlocksAt: Date.now() + 48*3600*1000 });
-                    return;
-                }
+                if (data.status === 'METABOLIC_LOCK' || (data.status === 'SUCCESS' && data.meta?.shouldLock)) {
+                  showMetabolicLock({
+                   remainingHours: data.meta?.lockDuration || 48,
+                   unlocksAt: Date.now() + 48 * 3600 * 1000
+                });
+                return;
+            }
 
                 appendMessage('AI', data.aiResponse);
                 if (data.meta) updateResonance(data.meta);
