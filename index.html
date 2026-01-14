@@ -388,10 +388,13 @@
 
                 const data = await res.json();
 
-                if (data.status === 'METABOLIC_LOCK' || data.meta?.shouldLock) {
-                    showMetabolicLock({ remainingHours: data.meta?.lockDuration || 48, unlocksAt: Date.now() + 48*3600*1000 });
-                    return;
-                }
+                if (data.status === 'METABOLIC_LOCK' || (data.status === 'SUCCESS' && data.meta?.shouldLock)) {
+                  showMetabolicLock({
+                   remainingHours: data.meta?.lockDuration || 48,
+                   unlocksAt: Date.now() + 48 * 3600 * 1000
+                });
+                return;
+            }
 
                 appendMessage('AI', data.aiResponse);
                 if (data.meta) updateResonance(data.meta);
