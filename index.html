@@ -238,7 +238,7 @@
                     <div class="text-lg md:text-xl font-mono text-cyan-500/60" id="metabolic-timer">--:--:--</div>
                 </div>
             </div>
-            <button onclick="location.reload()" class="pt-8 md:pt-10 text-[9px] text-slate-700 hover:text-cyan-600 tracking-[0.4em] uppercase transition-all underline">刷新场域 (REFRESH)</button>
+            <button onclick="clearAllAndReload()" class="pt-8 md:pt-10 text-[9px] text-slate-700 hover:text-cyan-600 tracking-[0.4em] uppercase transition-all underline">刷新场域 (REFRESH)</button>
         </div>
     </section>
 
@@ -569,6 +569,16 @@
             const target = document.getElementById(viewId);
             target.style.display = 'flex';
             setTimeout(() => target.classList.add('active'), 50);
+        }
+
+        function clearAllAndReload() {
+            // 彻底清空所有状态
+            localStorage.clear();
+            sessionStorage.clear();
+    
+            // 清空 Cookie
+            document.cookie.split(";").forEach(function(c) { 
+            document.cookie
         }
 
         function appendMessage(role, text) {
