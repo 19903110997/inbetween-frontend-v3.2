@@ -572,13 +572,9 @@
         }
 
         function clearAllAndReload() {
-            // 彻底清空所有状态
             localStorage.clear();
             sessionStorage.clear();
-    
-            // 清空 Cookie
-            document.cookie.split(";").forEach(function(c) { 
-            document.cookie
+            location.reload(true);
         }
 
         function appendMessage(role, text) {
