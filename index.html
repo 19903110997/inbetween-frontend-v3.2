@@ -224,8 +224,8 @@
     <!-- 2. 对话区 - 物理校准版 -->
     <section id="view-chat" class="view px-4 h-screen w-screen overflow-hidden flex flex-col">
         
-        <!-- 【修复核心】容器布局：justify-start 自然挂载，不再垂直对齐挤压顶部 -->
-        <div class="flex flex-col items-center w-full h-full pt-16 pb-0 max-w-[680px] mx-auto relative justify-start">
+        <!-- 【修复核心】pb-12：将整个面板向上顶起，确保录入框避开手机系统底栏 -->
+        <div class="flex flex-col items-center w-full h-full pt-16 pb-12 max-w-[680px] mx-auto relative justify-start">
             
             <!-- A. 顶部区域：Guna 仪表盘 & 标题 (使用 shrink-0 强制保留其高度，绝不被遮挡) -->
             <div class="w-full z-10 space-y-4 shrink-0 pb-4">
