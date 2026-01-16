@@ -31,8 +31,9 @@
         }
 
         .view { 
-            display: none; opacity: 0; transform: scale(0.99); transition: var(--transition-slow);
+            display: none; opacity: 0; transform: scale(0.99); transition: var(--transition-slow); 
             width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center;
+            position: absolute; inset: 0;
         }
         .view.active { display: flex; opacity: 1; transform: scale(1); }
 
@@ -78,7 +79,7 @@
             border-radius: 50%;
             filter: blur(2px);
             margin: 0 auto;
-            animation: drip 6s infinite;
+            animation: drip 5s infinite;
         }
         @keyframes drip {
             0%, 30% { transform: translateY(-60px); opacity: 0; }
@@ -217,13 +218,13 @@
         </div>
 
         <!-- 对话头部 -->
-        <div class="w-full max-w-[680px] flex justify-between items-end px-2">
-            <div class="space-y-1">
-                <h2 class="text-[10px] font-light tracking-widest text-slate-500 italic uppercase" id="chat-mode-title">INTIMACY_RESONANCE</h2>
-                <div class="text-[8px] text-cyan-500/50 uppercase tracking-widest" id="chat-phase-indicator">PHASE: SCANNING</div>
+        <div class="w-full flex justify-between items-end px-2">
+                <div class="space-y-1">
+                    <h2 class="text-[10px] font-light tracking-widest text-slate-500 italic uppercase" id="chat-mode-title">INNER_CONFLICT_RESONANCE</h2>
+                    <div class="text-[8px] text-cyan-500/50 uppercase tracking-widest" id="chat-phase-indicator">PHASE: SCANNING</div>
+                </div>
+                <button onclick="exitProtocol()" class="text-[8px] text-slate-600 uppercase tracking-widest border border-slate-900 px-3 py-1 rounded-full hover:text-slate-300 transition-all">EXIT</button>
             </div>
-            <button onclick="exitProtocol()" class="text-[8px] text-slate-600 uppercase tracking-widest border border-slate-900 px-3 py-1 rounded-full hover:text-slate-300">EXIT</button>
-        </div>
 
         <!-- 【总监版】对话面板 - 沉底布局 -->
         <div class="terminal-panel chat-panel border border-cyan-500/10">
