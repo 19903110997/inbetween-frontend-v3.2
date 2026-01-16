@@ -51,11 +51,11 @@
         }
         @media (min-width: 768px) { .terminal-panel { padding: 35px 40px; } }
 
-        /* 【物理层无损修复】对话面板 - 移除 160px 固定计算，改为弹性填充 */
+        /* 【物理层无损修复】对话面板 - 采用弹性填充，根治遮挡 */
         .chat-panel {
             width: 100%;
             z-index: 10;
-            flex: 1; /* 自动占据剩余空间 */
+            flex: 1; 
     
             background: var(--lake-blue);
             backdrop-filter: blur(40px);
@@ -68,10 +68,9 @@
             flex-direction: column; 
             overflow: hidden;
             padding: 0 !important;
-            min-height: 0; /* 允许在键盘弹出时收缩内容区 */
+            min-height: 0;
     
             box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.5);
-            transition: height 0.3s ease-out;
         }
         @media (min-width: 768px) { .chat-panel { height: 680px; flex: none; border-radius: 2rem; border-bottom: 1px solid rgba(34, 211, 238, 0.12); } }
 
@@ -122,7 +121,7 @@
         }
         .ai-avatar.active { animation: aura-breathe-fast 1.5s infinite ease-in-out; filter: blur(5px); }
         @keyframes aura-breathe { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.6; } }
-        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.6; } 50% { transform: scale(1.5); opacity: 0.8; } }
+        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.6; } 50% { transform: scale(1.4); opacity: 0.8; } }
 
         .typing-cursor::after { content: '_'; animation: blink 1s infinite; color: var(--sattva-cyan); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -218,10 +217,10 @@
     </section>
 
     <!-- 2. 对话区 - 物理校准版 -->
-    <section id="view-chat" class="view px-4 overflow-hidden flex flex-col">
+    <section id="view-chat" class="view px-4 overflow-hidden flex flex-col !justify-start">
         
-        <!-- 【修复核心】容器布局：pb-2 保持轻微间距。整个 div 将被 JS 动态计算高度以适应键盘 -->
-        <div id="chat-viewport-container" class="flex flex-col items-center w-full h-full pt-16 pb-2 max-w-[680px] mx-auto relative justify-start overflow-hidden">
+        <!-- 【修复核心】移除 pb-0 的硬编码，改用 JS 动态高度。justify-start 确保面板贴顶 -->
+        <div id="chat-viewport-container" class="flex flex-col items-center w-full h-full pt-16 max-w-[680px] mx-auto relative justify-start overflow-hidden">
             
             <!-- A. 顶部区域：Guna 仪表盘 & 标题 (使用 shrink-0 强制保留其高度，绝不被遮挡) -->
             <div class="w-full z-10 space-y-4 shrink-0 pb-4">
@@ -251,11 +250,11 @@
             <div class="chat-panel">
                 <!-- 消息流区域 -->
                 <div id="chat-flow" class="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto no-scrollbar scroll-smooth w-full">
-                    <!-- 消息动态插入 -->
+                    <!-- 消息会动态插入这里 -->
                 </div>
                 
                 <!-- 输入区：锁定在底部 -->
-                <div class="px-6 pt-4 pb-8 md:pb-8 border-t border-white/5 bg-black/40 w-full shrink-0">
+                <div id="chat-input-area" class="px-6 pt-4 pb-8 md:pb-8 border-t border-white/5 bg-black/40 w-full shrink-0">
                     <!-- 打字指示器 -->
                     <div id="typing-indicator" class="text-[8px] text-cyan-500/40 mb-2 tracking-widest uppercase hidden">Titrating...</div>
     
@@ -338,7 +337,7 @@
             currentModeIndex: 0,
             modes: [
                 { text: "内在关系复盘", label: "INNER_CONFLICT_RESONANCE", value: "INNER_CONFLICT" },
-                { text: "亲密关系复盘", label: "INTIMACY_RESONANCE", value: "INTIMACY" },
+                { text: "亲密关系冲突", label: "INTIMACY_RESONANCE", value: "INTIMACY" },
                 { text: "原生家庭冲突", label: "FAMILY_RESONANCE", value: "FAMILY" },
                 { text: "职场关系复盘", label: "WORKPLACE_RESONANCE", value: "WORK" }
             ],
@@ -360,45 +359,56 @@
         initUser();
 
         /**
-         * 【移动端适配脚本】实时监控视觉视口高度变化
-         * 解决键盘弹出时录入框精准定位及上方内容可见性问题
+         * 【移动端深度适配】解决键盘与录入框的贴合问题
+         * 1. 使用 VisualViewport 获取真实可见高度
+         * 2. 动态调整容器高度，并消除 justify-center 带来的位移
          */
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                const chatView = document.getElementById('view-chat');
-                if (chatView && chatView.classList.contains('active')) {
-                    const container = document.getElementById('chat-viewport-container');
-                    const height = window.visualViewport.height;
-                    // 动态调整主容器高度，减去顶部间隙
-                    container.style.height = `${height}px`;
-                    // 自动滚动到底部
-                    const flow = document.getElementById('chat-flow');
-                    if(flow) flow.scrollTop = flow.scrollHeight;
+        function adjustLayoutForKeyboard() {
+            const chatView = document.getElementById('view-chat');
+            if (chatView && chatView.classList.contains('active') && window.visualViewport) {
+                const container = document.getElementById('chat-viewport-container');
+                const inputArea = document.getElementById('chat-input-area');
+                const viewportHeight = window.visualViewport.height;
+                const windowHeight = window.innerHeight;
+                
+                // 动态高度锁定
+                container.style.height = `${viewportHeight}px`;
+                
+                // 如果键盘弹出 (视口高度显著小于窗口高度)
+                if (viewportHeight < windowHeight * 0.9) {
+                    inputArea.style.paddingBottom = '8px'; // 键盘弹出时，极简间距
+                } else {
+                    inputArea.style.paddingBottom = '32px'; // 闲置时，保留安全间距
                 }
-            });
+                
+                // 始终滚动到底部
+                const flow = document.getElementById('chat-flow');
+                if(flow) flow.scrollTop = flow.scrollHeight;
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', adjustLayoutForKeyboard);
+            window.visualViewport.addEventListener('scroll', adjustLayoutForKeyboard);
         }
 
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+            const target = document.getElementById(viewId);
+            target.classList.add('active');
             
-            // 【核心修正】切回首页时，强制恢复 START 按钮的初始状态
+            // 状态重置逻辑
             if (viewId === 'view-landing') {
                 const btn = document.getElementById('start-btn');
-                if (btn) {
-                    btn.textContent = "START";
-                    btn.disabled = false;
-                }
+                if (btn) { btn.textContent = "START"; btn.disabled = false; }
             }
 
             if (viewId === 'view-chat') {
                 document.getElementById('user-input').disabled = false;
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('user-input').focus();
-                // 切换到聊天页时手动触发一次高度校准
-                if(window.visualViewport) {
-                    document.getElementById('chat-viewport-container').style.height = `${window.visualViewport.height}px`;
-                }
+                // 切换时立即校准一次
+                setTimeout(adjustLayoutForKeyboard, 100);
             }
         }
 
