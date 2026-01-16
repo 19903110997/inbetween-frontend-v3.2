@@ -51,15 +51,32 @@
         }
         @media (min-width: 768px) { .terminal-panel { padding: 35px 40px; } }
 
-        /* 【总监版】对话面板 - 手机端友好布局 */
+        /* 【物理层无损修复】对话面板 - 移除 160px 固定计算，改为 flex 填充，根治遮挡 */
         .chat-panel {
-            max-width: 680px; 
-            height: 65vh;
+            width: 100%;
+            z-index: 10;
+            /* 关键修改：不再写死高度，而是自动占据剩余空间 */
+            flex: 1; 
+    
+            background: var(--lake-blue);
+            backdrop-filter: blur(40px);
+    
+            /* 边框逻辑：只给上边框，不要下边框，增强下沉视觉 */
+            border: 1px solid rgba(34, 211, 238, 0.12);
+            border-bottom: none; 
+    
+            /* 圆角逻辑：顶部圆角，底部贴边 */
+            border-radius: 2rem 2rem 0 0; 
+    
             display: flex; 
             flex-direction: column; 
+            overflow: hidden;
             padding: 0 !important;
+            min-height: 0; /* 允许在内容多时合理压缩，防止撑爆容器 */
+    
+            box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @media (min-width: 768px) { .chat-panel { height: 580px; } }
 
         /* 动态背景 */
         #resonance-canvas {
@@ -87,7 +104,7 @@
             100% { transform: translateY(100px); opacity: 0; }
         }
 
-        /* 【总监版新增】昵称输入框 */
+        /* 昵称输入框 */
         .glow-input {
             background: transparent; border: none;
             border-bottom: 0.5px solid rgba(34, 211, 238, 0.2);
@@ -98,7 +115,7 @@
         .glow-input::placeholder { color: rgba(226, 232, 240, 0.12); font-weight: 200; }
         .glow-input:focus { outline: none; border-bottom-color: rgba(34, 211, 238, 0.6); width: 120px; }
 
-        /* 【总监版新增】AI 呼吸头像 */
+        /* AI 呼吸头像 */
         .ai-avatar {
             width: 28px; height: 28px;
             background: radial-gradient(circle, var(--sattva-cyan) 0%, transparent 75%);
@@ -108,7 +125,7 @@
         }
         .ai-avatar.active { animation: aura-breathe-fast 1.5s infinite ease-in-out; filter: blur(5px); }
         @keyframes aura-breathe { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.6; } }
-        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.5; } 50% { transform: scale(1.4); opacity: 0.8; } }
+        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.6; } 50% { transform: scale(1.4); opacity: 0.8; } }
 
         .typing-cursor::after { content: '_'; animation: blink 1s infinite; color: var(--sattva-cyan); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -174,7 +191,7 @@
             <div class="titration-anchor"><div class="titration-fluid"></div></div>
 
             <div class="w-full flex flex-col items-center space-y-6 md:space-y-8">
-                <!-- 【总监版新增】昵称输入 -->
+                <!-- 昵称输入 -->
                 <div class="space-y-3 text-center">
                     <label class="text-[9px] text-slate-500 tracking-[0.3em] uppercase block">你想让 In 怎么称呼你？</label>
                     <input type="text" id="nickname-input" placeholder="输入昵称..." class="glow-input" autocomplete="off">
@@ -203,49 +220,66 @@
         </div>
     </section>
 
-    <!-- 2. 对话区 - 使用总监版的手机端友好布局 -->
-    <section id="view-chat" class="view space-y-4 px-4 md:px-6 z-10">
-        <!-- Guna 仪表盘 -->
-        <div class="w-full max-w-[560px] flex gap-4 opacity-50" id="guna-panel">
-            <div class="flex-1 space-y-1">
-                <div class="flex justify-between text-[7px] text-amber-500 uppercase tracking-tighter"><span>RAJAS</span><span id="rajas-val">30%</span></div>
-                <div class="h-[1px] bg-slate-800 w-full"><div id="rajas-bar" class="h-full bg-amber-500/50 transition-all duration-1000" style="width: 30%"></div></div>
-            </div>
-            <div class="flex-1 space-y-1">
-                <div class="flex justify-between text-[7px] text-cyan-400 uppercase tracking-tighter"><span>SATTVA</span><span id="sattva-val">40%</span></div>
-                <div class="h-[1px] bg-slate-800 w-full"><div id="sattva-bar" class="h-full bg-cyan-400/50 transition-all duration-1000" style="width: 40%"></div></div>
-            </div>
-        </div>
-
-        <!-- 对话头部 -->
-        <div class="w-full flex justify-between items-end px-2">
-                <div class="space-y-1">
-                    <h2 class="text-[10px] font-light tracking-widest text-slate-500 italic uppercase" id="chat-mode-title">INNER_CONFLICT_RESONANCE</h2>
-                    <div class="text-[8px] text-cyan-500/50 uppercase tracking-widest" id="chat-phase-indicator">PHASE: SCANNING</div>
-                </div>
-                <button onclick="exitProtocol()" class="text-[8px] text-slate-600 uppercase tracking-widest border border-slate-900 px-3 py-1 rounded-full hover:text-slate-300 transition-all">EXIT</button>
-            </div>
-
-        <!-- 【总监版】对话面板 - 沉底布局 -->
-        <div class="terminal-panel chat-panel border border-cyan-500/10">
-            <!-- 消息流：flex-1 占据所有剩余空间 -->
-            <div id="chat-flow" class="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto no-scrollbar scroll-smooth w-full"></div>
+    <!-- 2. 对话区 - 物理校准版 -->
+    <section id="view-chat" class="view px-4 h-screen w-screen overflow-hidden flex flex-col">
+        
+        <!-- 【修复核心】容器布局：justify-start 自然挂载，不再垂直对齐挤压顶部 -->
+        <div class="flex flex-col items-center w-full h-full pt-16 pb-0 max-w-[680px] mx-auto relative justify-start">
             
-            <!-- 输入区：锁定在底部 -->
-            <div class="p-6 md:p-8 border-t border-white/5 bg-black/40 w-full">
-                <div id="typing-indicator" class="text-[8px] text-cyan-500/40 mb-2 tracking-widest uppercase hidden">Titrating...</div>
-                <div class="flex gap-4 items-end">
-                    <textarea id="user-input" placeholder="注入场域体征..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-slate-200 resize-none h-12 py-2 placeholder-slate-700 font-light disabled:opacity-20" disabled></textarea>
-                    <button id="send-btn" onclick="sendMessage()" class="w-10 h-10 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-400 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-20" disabled>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    </button>
+            <!-- A. 顶部区域：Guna 仪表盘 & 标题 (使用 shrink-0 强制保留其高度，绝不被遮挡) -->
+            <div class="w-full z-10 space-y-4 shrink-0 pb-4">
+                <!-- Guna 仪表盘 -->
+                <div class="w-full flex gap-4 opacity-100 px-2 relative z-50" id="guna-panel">
+                    <div class="flex-1 space-y-1">
+                        <div class="flex justify-between text-[7px] text-amber-500 uppercase tracking-tighter"><span>RAJAS</span><span id="rajas-val">30%</span></div>
+                        <div class="h-[1px] bg-slate-800 w-full"><div id="rajas-bar" class="h-full bg-amber-500/50 transition-all duration-1000" style="width: 30%"></div></div>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <div class="flex justify-between text-[7px] text-cyan-400 uppercase tracking-tighter"><span>SATTVA</span><span id="sattva-val">40%</span></div>
+                        <div class="h-[1px] bg-slate-800 w-full"><div id="sattva-bar" class="h-full bg-cyan-400/50 transition-all duration-1000" style="width: 40%"></div></div>
+                    </div>
+                </div>
+
+                <!-- 标题与退出按钮 -->
+                <div class="w-full flex justify-between items-end px-2">
+                    <div class="space-y-1">
+                        <h2 class="text-[10px] font-light tracking-widest text-slate-500 italic uppercase" id="chat-mode-title">INNER_CONFLICT_RESONANCE</h2>
+                        <div class="text-[8px] text-cyan-500/50 uppercase tracking-widest" id="chat-phase-indicator">PHASE: SCANNING</div>
+                    </div>
+                    <button onclick="exitProtocol()" class="text-[8px] text-slate-600 uppercase tracking-widest border border-slate-900 px-3 py-1 rounded-full hover:text-slate-300 transition-all">EXIT</button>
                 </div>
             </div>
-        </div>
 
-        <!-- 【V3.2保留】报告触发按钮 -->
-        <div id="report-trigger" class="w-full max-w-[680px] text-center" style="opacity: 0; pointer-events: none; transition: opacity 0.5s;">
-            <button onclick="generateReport()" class="text-[8px] text-cyan-600 hover:text-cyan-400 tracking-widest uppercase transition-colors">GENERATE REPORT</button>
+            <!-- B. 底部区域：对话面板 (Chat Panel) - 采用弹性填充 flex-1，自动沉底 -->
+            <div class="chat-panel">
+                <!-- 消息流区域 -->
+                <div id="chat-flow" class="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto no-scrollbar scroll-smooth w-full">
+                    <!-- 消息会动态插入这里 -->
+                </div>
+                
+                <!-- 输入区：锁定在底部 -->
+                <div class="px-6 pt-4 pb-12 md:pb-8 border-t border-white/5 bg-black/40 w-full shrink-0">
+                    <!-- 打字指示器 -->
+                    <div id="typing-indicator" class="text-[8px] text-cyan-500/40 mb-2 tracking-widest uppercase hidden">Titrating...</div>
+    
+                    <!-- 输入框和发送按钮 -->
+                    <div class="flex gap-4 items-end">
+                       <textarea id="user-input" placeholder="注入场域体征..." class="flex-1 bg-transparent border border-slate-800/50 rounded-lg focus:ring-1 focus:ring-cyan-500/30 text-sm text-slate-200 resize-none h-10 py-2 px-3 placeholder-slate-700 font-light disabled:opacity-20 transition-all"></textarea>
+                       <button id="send-btn" onclick="sendMessage()" class="w-10 h-10 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-20">
+                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                       </button>
+                    </div>
+
+                    <!-- 报告按钮区域 -->
+                    <div id="report-trigger-wrapper" class="w-full text-center mt-2 h-0 overflow-hidden transition-all duration-500">
+                       <div id="report-trigger" style="opacity: 0; pointer-events: none;">
+                           <button onclick="generateReport()" class="text-[9px] text-cyan-500/50 hover:text-cyan-400 uppercase tracking-widest pt-2">
+                             GENERATE REPORT
+                           </button>
+                       </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -258,15 +292,9 @@
         </div>
     </section>
 
-    <!-- 4. 【V3.2保留 + 修改】代谢锁视图 - 添加报告按钮 -->
+    <!-- 4. 代谢锁视图 -->
     <section id="view-metabolism" class="view px-4">
         <div class="terminal-panel space-y-8 text-center max-w-md">
-
-            <!-- 【新增】报告生成按钮 -->
-            <button onclick="generateReport()" class="glow-btn mb-6">
-                生成观察报告
-            </button>
-
             <div class="titration-anchor"><div class="titration-fluid"></div></div>
             <h2 class="text-2xl md:text-3xl italic text-cyan-400 font-light tracking-wide">代谢期已启动</h2>
             <div id="metabolic-timer" class="text-4xl md:text-5xl font-mono text-amber-400 tracking-wider"></div>
@@ -275,32 +303,19 @@
                 <span class="text-xs text-slate-600 italic mt-2 block">你已经看见了，现在需要的是呼吸和等待。</span>
             </p>
             
-            <!-- 【关键修改】添加报告生成按钮 -->
-            <button onclick="generateReport()" class="glow-btn mt-6">
-                生成观察报告
-            </button>
-
-            <button onclick="clearAllAndReload()" class="text-[8px] text-slate-700 hover:text-slate-500 uppercase tracking-widest mt-4">
-                重置会话
-            </button>
+            <button onclick="generateReport()" class="glow-btn mt-6">生成观察报告</button>
+            <button onclick="clearAllAndReload()" class="text-[8px] text-slate-700 hover:text-slate-500 uppercase tracking-widest mt-4">重置会话</button>
         </div>
     </section>
 
-    <!-- 5. 【V3.2保留】报告视图 -->
+    <!-- 5. 报告视图 -->
     <section id="view-report" class="view px-4">
         <div class="terminal-panel space-y-6 max-w-2xl text-left overflow-y-auto" style="max-height: 80vh;">
             <div class="titration-anchor"><div class="titration-fluid"></div></div>
-            
             <h2 class="text-xl md:text-2xl text-cyan-400 italic font-light text-center">观察报告</h2>
-            
-            <div id="report-content" class="text-sm text-slate-300 leading-relaxed space-y-4 whitespace-pre-wrap font-light" style="font-family: 'Noto Serif SC'">
-                正在生成报告...
-            </div>
-            
+            <div id="report-content" class="text-sm text-slate-300 leading-relaxed space-y-4 whitespace-pre-wrap font-light" style="font-family: 'Noto Serif SC'">正在生成报告...</div>
             <div class="text-center space-y-4 pt-6 border-t border-white/5">
-                <div class="text-[9px] text-slate-600 tracking-widest uppercase">
-                    Report ID: <span id="report-id" class="text-cyan-500/50 font-mono">---</span>
-                </div>
+                <div class="text-[9px] text-slate-600 tracking-widest uppercase">Report ID: <span id="report-id" class="text-cyan-500/50 font-mono">---</span></div>
                 <button onclick="switchView('view-landing')" class="glow-btn">返回首页</button>
             </div>
         </div>
@@ -308,11 +323,9 @@
 
     <script>
         // ============================================
-        // V3.3 融合版核心逻辑
-        // 基于 V3.2 完整功能 + 总监版优化
+        // V3.3 融合版核心逻辑 - 完整继承业务代码
         // ============================================
 
-        // 1. API 配置 - 使用总监版的正确路径
         const getApiBase = () => {
             let origin = 'https://api.geili.space';
             if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__?.API_ORIGIN) {
@@ -322,10 +335,9 @@
         };
         const API_BASE = getApiBase();
 
-        // 2. 状态管理
         const state = {
             userId: null,
-            nickname: '旅人',  // 【总监版新增】
+            nickname: '旅人',
             currentModeIndex: 0,
             modes: [
                 { text: "内在关系复盘", label: "INNER_CONFLICT_RESONANCE", value: "INNER_CONFLICT" },
@@ -336,10 +348,9 @@
             targetGuna: { r: 0.3, t: 0.3, s: 0.4 },
             currentGuna: { r: 0.3, t: 0.3, s: 0.4 },
             isProcessing: false,
-            isTyping: false  // 【总监版新增】
+            isTyping: false
         };
 
-        // 3. 初始化 UserId
         function initUser() {
             let uid = localStorage.getItem('inbetween_userId');
             if (!uid) {
@@ -351,7 +362,6 @@
         }
         initUser();
 
-        // 4. 视图切换
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
@@ -363,33 +373,24 @@
             }
         }
 
-        // 5. 模式切换
         function cycleMode() {
             state.currentModeIndex = (state.currentModeIndex + 1) % state.modes.length;
             document.getElementById('mode-text').textContent = state.modes[state.currentModeIndex].text;
         }
 
-        // 6. 开始会话
         async function startSession() {
-            // 【总监版新增】读取昵称
             const nicknameInput = document.getElementById('nickname-input');
             state.nickname = nicknameInput.value.trim() || '旅人';
-
             const btn = document.getElementById('start-btn');
             btn.textContent = "CONNECTING...";
             btn.disabled = true;
-
             const mode = state.modes[state.currentModeIndex].value;
-
             try {
-                // 【修改】使用统一的 API 路径
                 const res = await fetch(`${API_BASE}/start`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: state.userId, mode })
                 });
-
-                // 【V3.2保留】代谢锁检测
                 if (res.status === 423) {
                     const data = await res.json();
                     showMetabolicLock(data.lockStatus);
@@ -397,65 +398,41 @@
                     btn.disabled = false;
                     return;
                 }
-
                 if (!res.ok) throw new Error('Network error');
-
                 const data = await res.json();
-                
                 if (data.meta) updateResonance(data.meta);
-                
-                // 【总监版修改】温柔的欢迎语
                 const welcomeMsg = `嗨，${state.nickname}。我是 In。<br>这里没有评判，也不需要你这就变好。<br>我只是在这里陪你，把那些缠绕你的念头，稍微理一理。<br><br>告诉我，此刻你的心里，什么东西最沉重？`;
-                
                 switchView('view-chat');
-                
-                setTimeout(() => {
-                    typeMessage('AI', welcomeMsg);
-                }, 800);
-
+                setTimeout(() => { typeMessage('AI', welcomeMsg); }, 800);
             } catch (error) {
                 console.error(error);
-                alert("无法连接到意识场。请检查后端服务是否启动。");
+                alert("无法连接到意识场。");
                 btn.textContent = "START";
                 btn.disabled = false;
             }
         }
 
-        // 7. 发送消息
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const text = input.value.trim();
             if (!text || state.isProcessing || state.isTyping) return;
-
             state.isProcessing = true;
             appendMessage('USER', text);
             input.value = '';
             document.getElementById('typing-indicator').classList.remove('hidden');
-            document.getElementById('chat-phase-indicator').textContent = 'PHASE: TITRATING...';
-
             try {
-                // 【修改】使用统一的 API 路径
                 const res = await fetch(`${API_BASE}/message`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: state.userId, message: text })
                 });
-
                 const data = await res.json();
-
-                // 【V3.2保留】代谢锁检测
                 if (data.status === 'METABOLIC_LOCK' || (data.status === 'SUCCESS' && data.meta?.shouldLock)) {
-                    showMetabolicLock({
-                        remainingHours: data.meta?.lockDuration || 48,
-                        unlocksAt: Date.now() + (data.meta?.lockDuration || 48) * 3600 * 1000
-                    });
+                    showMetabolicLock({ remainingHours: data.meta?.lockDuration || 48, unlocksAt: Date.now() + (data.meta?.lockDuration || 48) * 3600 * 1000 });
                     return;
                 }
-
-                // 【总监版修改】使用支持 HTML 的打字效果
                 await typeMessage('AI', data.aiResponse);
                 if (data.meta) updateResonance(data.meta);
-
             } catch (error) {
                 console.error(error);
                 appendMessage('AI', '[场域干扰] 信号同步中断。');
@@ -465,146 +442,84 @@
             }
         }
 
-        // 8. 【总监版修改】支持 HTML 的打字效果
         async function typeMessage(role, fullHtml) {
             state.isTyping = true;
             const flow = document.getElementById('chat-flow');
             const msgContainer = document.createElement('div');
             msgContainer.className = `flex gap-6 animate-fadeIn opacity-100`;
-            
-            // 【总监版新增】AI 头像
             const avatarHtml = role === 'AI' ? `<div class="ai-avatar shrink-0 mt-1 active"></div>` : '';
             const contentId = `content-${Date.now()}`;
-            
             msgContainer.innerHTML = `${avatarHtml}<div id="${contentId}" class="text-sm text-slate-300 leading-relaxed max-w-[85%] font-light italic typing-cursor" style="font-family: 'Noto Serif SC'"></div>`;
             flow.appendChild(msgContainer);
-            
             const contentEl = document.getElementById(contentId);
             const avatarEl = msgContainer.querySelector('.ai-avatar');
-
-            // 分割 HTML，提取 <br> 标签
             const parts = fullHtml.split(/(<br\s*\/?>)/i);
             const characters = [];
-            parts.forEach(p => {
-                if (p.toLowerCase().startsWith('<br')) characters.push('<br>');
-                else characters.push(...p.split(''));
-            });
-
-            // 逐字打印
+            parts.forEach(p => { if (p.toLowerCase().startsWith('<br')) characters.push('<br>'); else characters.push(...p.split('')); });
             for (let char of characters) {
-                if (char === '<br>') contentEl.innerHTML += '<br>';
-                else contentEl.innerHTML += char;
-                
+                if (char === '<br>') contentEl.innerHTML += '<br>'; else contentEl.innerHTML += char;
                 flow.scrollTop = flow.scrollHeight;
-                
                 let delay = 20 + Math.random() * 25;
-                if ([',', '，', '.', '。', '?', '？', '!', '！'].includes(char)) {
-                    delay += 450;
-                }
-                
+                if ([',', '，', '.', '。', '?', '？', '!', '！'].includes(char)) delay += 450;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
-            
-            // 打字结束
             contentEl.classList.remove('typing-cursor');
             if (avatarEl) avatarEl.classList.remove('active');
             state.isTyping = false;
         }
 
-        // 9. 添加消息（用户消息）
         function appendMessage(role, content) {
             const flow = document.getElementById('chat-flow');
             const msgContainer = document.createElement('div');
-            
             if (role === 'USER') {
                 msgContainer.className = 'flex justify-end';
-                msgContainer.innerHTML = `
-                    <div class="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl px-4 py-2 max-w-[75%]">
-                        <div class="text-sm text-slate-200 font-light">${content}</div>
-                    </div>
-                `;
+                msgContainer.innerHTML = `<div class="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl px-4 py-2 max-w-[75%]"><div class="text-sm text-slate-200 font-light">${content}</div></div>`;
             } else {
                 msgContainer.className = 'flex gap-6';
-                msgContainer.innerHTML = `
-                    <div class="ai-avatar shrink-0 mt-1"></div>
-                    <div class="text-sm text-slate-300 leading-relaxed max-w-[85%] font-light italic" style="font-family: 'Noto Serif SC'">${content}</div>
-                `;
+                msgContainer.innerHTML = `<div class="ai-avatar shrink-0 mt-1"></div><div class="text-sm text-slate-300 leading-relaxed max-w-[85%] font-light italic" style="font-family: 'Noto Serif SC'">${content}</div>`;
             }
-            
             flow.appendChild(msgContainer);
             flow.scrollTop = flow.scrollHeight;
         }
 
-        // 10. 【V3.2保留】生成报告
         async function generateReport() {
             const btn = event?.target;
             if (btn) btn.textContent = "GENERATING...";
-            
             try {
-                // 【修改】使用统一的 API 路径
-                const res = await fetch(`${API_BASE}/report`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: state.userId })
-                });
-                
+                const res = await fetch(`${API_BASE}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: state.userId }) });
                 if (!res.ok) throw new Error('Report generation failed');
                 const data = await res.json();
-                
                 document.getElementById('report-content').textContent = data.report.reportText || JSON.stringify(data.report, null, 2);
                 document.getElementById('report-id').textContent = data.report.reportId;
                 switchView('view-report');
-                
-            } catch (error) {
-                console.error(error);
-                alert("报告生成失败，场域数据不足。");
-            } finally {
-                if (btn) btn.textContent = "生成观察报告";
-            }
+            } catch (error) { console.error(error); alert("报告生成失败。"); } finally { if (btn) btn.textContent = "生成观察报告"; }
         }
 
-        // 11. 【V3.2保留】更新 Guna 仪表盘和波形
         function updateResonance(meta) {
             if (meta.guna) {
                 state.targetGuna = meta.guna; 
-                
                 document.getElementById('rajas-bar').style.width = `${meta.guna.rajas * 100}%`;
                 document.getElementById('rajas-val').textContent = `${Math.round(meta.guna.rajas * 100)}%`;
-                
                 document.getElementById('sattva-bar').style.width = `${meta.guna.sattva * 100}%`;
                 document.getElementById('sattva-val').textContent = `${Math.round(meta.guna.sattva * 100)}%`;
             }
-            
             if (meta.phase) {
-                const phaseMap = {
-                    'SCANNING': 'SCANNING', 'STORY_SAMPLING': 'SAMPLING',
-                    'IDENTIFYING': 'IDENTIFYING', 'PATTERN_EMERGENCE': 'EMERGENCE',
-                    'DISSOLUTION_ACTIVE': 'DISSOLVING', 'INTEGRATING': 'INTEGRATING'
-                };
-                
+                const phaseMap = { 'SCANNING': 'SCANNING', 'STORY_SAMPLING': 'SAMPLING', 'IDENTIFYING': 'IDENTIFYING', 'PATTERN_EMERGENCE': 'EMERGENCE', 'DISSOLUTION_ACTIVE': 'DISSOLVING', 'INTEGRATING': 'INTEGRATING' };
                 const indicator = document.getElementById('chat-phase-indicator');
                 indicator.textContent = `PHASE: ${phaseMap[meta.phase] || meta.phase}`;
-                
-                indicator.style.transform = 'scale(1.1)';
-                indicator.style.color = 'var(--sattva-cyan)';
-                setTimeout(() => {
-                    indicator.style.transform = 'scale(1)';
-                    indicator.style.color = '';
-                }, 500);
+                indicator.style.transform = 'scale(1.1)'; indicator.style.color = 'var(--sattva-cyan)';
+                setTimeout(() => { indicator.style.transform = 'scale(1)'; indicator.style.color = ''; }, 500);
             }
-            
             const sattva = state.targetGuna.s || 0.4;
             document.getElementById('subtle-progress').style.width = `${sattva * 100}%`;
-            
-            // 【V3.2保留】报告按钮显隐
             const reportBtn = document.getElementById('report-trigger');
             if (meta.reportReady) {
-                reportBtn.style.opacity = '1';
-                reportBtn.style.pointerEvents = 'auto';
+                const wrapper = document.getElementById('report-trigger-wrapper');
+                wrapper.style.height = 'auto';
+                reportBtn.style.opacity = '1'; reportBtn.style.pointerEvents = 'auto';
             }
         }
 
-        // 12. 【V3.2保留】代谢锁逻辑
         function showMetabolicLock(lockStatus) {
             setTimeout(() => {
                 switchView('view-metabolism');
@@ -617,10 +532,7 @@
             const updateTimer = () => {
                 const now = new Date();
                 const remaining = unlockTime - now;
-                if (remaining <= 0) {
-                    timerEl.textContent = 'UNLOCKED';
-                    return;
-                }
+                if (remaining <= 0) { timerEl.textContent = 'UNLOCKED'; return; }
                 const h = Math.floor(remaining / 3600000);
                 const m = Math.floor((remaining % 3600000) / 60000);
                 timerEl.textContent = `${h}h ${m}m`;
@@ -629,88 +541,43 @@
             setInterval(updateTimer, 60000);
         }
 
-        // 13. 退出协议
-        function exitProtocol() {
-            if (confirm('确定退出当前会话？未保存的对话将丢失。')) {
-                switchView('view-landing');
-                document.getElementById('chat-flow').innerHTML = '';
-                document.getElementById('user-input').value = '';
-            }
-        }
+        function exitProtocol() { if (confirm('确定退出当前会话？')) { switchView('view-landing'); document.getElementById('chat-flow').innerHTML = ''; } }
+        function clearAllAndReload() { if (confirm('确定重置所有数据？')) { localStorage.removeItem('inbetween_userId'); location.reload(); } }
 
-        // 14. 【V3.2保留】清除并重载
-        function clearAllAndReload() {
-            if (confirm('确定重置所有会话数据？此操作不可撤销。')) {
-                localStorage.removeItem('inbetween_userId');
-                location.reload();
-            }
-        }
-
-        // 15. 【V3.2保留】Canvas 动态波形渲染
         const canvas = document.getElementById('resonance-canvas');
         const ctx = canvas.getContext('2d');
         let time = 0;
-
-        function resizeCanvas() { 
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight; 
-        }
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas); 
         resizeCanvas();
-
-        function lerp(start, end, factor) {
-            return start + (end - start) * factor;
-        }
-
+        function lerp(start, end, factor) { return start + (end - start) * factor; }
         function drawResonance() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             time += 0.005;
-
-            // 平滑插值
             state.currentGuna.r = lerp(state.currentGuna.r, state.targetGuna.rajas || 0.3, 0.05);
-            state.currentGuna.s = lerp(state.currentGuna.s, state.targetGuna.sattva || 0.4, 0.05);
-
+            state.currentGuna.s = lerp(state.currentGuna.s, state.targetGuna.s, 0.05);
             const drawWave = (amplitude, frequency, speed, color, opacity, yOffset) => {
-                ctx.beginPath(); 
-                ctx.strokeStyle = color; 
-                ctx.globalAlpha = opacity; 
-                ctx.lineWidth = 1.2;
-                
+                ctx.beginPath(); ctx.strokeStyle = color; ctx.globalAlpha = opacity; ctx.lineWidth = 1.2;
                 for (let x = 0; x < canvas.width; x += 3) {
-                    const y = yOffset + 
-                        Math.sin(x * frequency + time * speed) * amplitude + 
-                        Math.sin(x * frequency * 0.5 + time * speed * 0.5) * (amplitude * 0.5);
-                    if (x === 0) ctx.moveTo(x, y); 
-                    else ctx.lineTo(x, y);
+                    const y = yOffset + Math.sin(x * frequency + time * speed) * amplitude + Math.sin(x * frequency * 0.5 + time * speed * 0.5) * (amplitude * 0.5);
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             };
-
             const cy = canvas.height / 2;
-            
-            // Rajas 波形（动态驱动）
             const rajasAmp = 10 + state.currentGuna.r * 60;
             drawWave(rajasAmp, 0.004, 2, '#f59e0b', 0.15, cy - 10);
             drawWave(rajasAmp * 0.8, 0.005, 2.5, '#f59e0b', 0.1, cy - 10);
-
-            // Sattva 波形（动态驱动）
             const sattvaAmp = 40 - state.currentGuna.s * 20; 
             drawWave(sattvaAmp, 0.002, 1, '#22d3ee', 0.2 + state.currentGuna.s * 0.1, cy + 10);
             drawWave(sattvaAmp * 0.8, 0.0025, 1.2, '#22d3ee', 0.15, cy + 10);
-
             requestAnimationFrame(drawResonance);
         }
         drawResonance();
 
-        // 16. 输入框回车发送
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('user-input');
-            input?.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+            input?.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
         });
     </script>
 </body>
