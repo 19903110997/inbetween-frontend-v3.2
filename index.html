@@ -367,6 +367,15 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             
+            // 【核心修正】切回首页时，强制恢复 START 按钮的初始状态
+            if (viewId === 'view-landing') {
+                const btn = document.getElementById('start-btn');
+                if (btn) {
+                    btn.textContent = "START";
+                    btn.disabled = false;
+                }
+            }
+
             if (viewId === 'view-chat') {
                 document.getElementById('user-input').disabled = false;
                 document.getElementById('send-btn').disabled = false;
