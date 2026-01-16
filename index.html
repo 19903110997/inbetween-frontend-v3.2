@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>In-between | 意识共振协议终端 v3.3 融合版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;500;900&family=JetBrains+Mono:wght@100;400;700&display=swap" rel="stylesheet">
@@ -51,32 +51,29 @@
         }
         @media (min-width: 768px) { .terminal-panel { padding: 35px 40px; } }
 
-        /* 【物理层无损修复】对话面板 - 移除 160px 固定计算，改为 flex 填充，根治遮挡 */
+        /* 【物理层无损修复】对话面板 - 移除 160px 固定计算，改为弹性填充 */
         .chat-panel {
             width: 100%;
             z-index: 10;
-            /* 关键修改：不再写死高度，而是自动占据剩余空间 */
-            flex: 1; 
+            flex: 1; /* 自动占据剩余空间 */
     
             background: var(--lake-blue);
             backdrop-filter: blur(40px);
-    
-            /* 边框逻辑：只给上边框，不要下边框，增强下沉视觉 */
             border: 1px solid rgba(34, 211, 238, 0.12);
             border-bottom: none; 
     
-            /* 圆角逻辑：顶部圆角，底部贴边 */
             border-radius: 2rem 2rem 0 0; 
     
             display: flex; 
             flex-direction: column; 
             overflow: hidden;
             padding: 0 !important;
-            min-height: 0; /* 允许在内容多时合理压缩，防止撑爆容器 */
+            min-height: 0; /* 允许在键盘弹出时收缩内容区 */
     
             box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.5);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: height 0.3s ease-out;
         }
+        @media (min-width: 768px) { .chat-panel { height: 680px; flex: none; border-radius: 2rem; border-bottom: 1px solid rgba(34, 211, 238, 0.12); } }
 
         /* 动态背景 */
         #resonance-canvas {
@@ -125,7 +122,7 @@
         }
         .ai-avatar.active { animation: aura-breathe-fast 1.5s infinite ease-in-out; filter: blur(5px); }
         @keyframes aura-breathe { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.3); opacity: 0.6; } }
-        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.6; } 50% { transform: scale(1.4); opacity: 0.8; } }
+        @keyframes aura-breathe-fast { 0%, 100% { transform: scale(1.1); opacity: 0.6; } 50% { transform: scale(1.5); opacity: 0.8; } }
 
         .typing-cursor::after { content: '_'; animation: blink 1s infinite; color: var(--sattva-cyan); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -201,7 +198,6 @@
                 <div class="space-y-3 text-center w-full">
                     <label class="text-[8px] text-slate-600 tracking-[0.3em] uppercase block">选择当前结晶点</label>
                     <div onclick="cycleMode()" class="crystal-selector group">
-                        <!-- 修正：初始文字与 JS 数组第一项对齐 -->
                         <span id="mode-text" class="mode-text group-hover:text-cyan-400">内在关系复盘</span>
                         <span class="rajas-arrow">></span>
                     </div>
@@ -222,10 +218,10 @@
     </section>
 
     <!-- 2. 对话区 - 物理校准版 -->
-    <section id="view-chat" class="view px-4 h-screen w-screen overflow-hidden flex flex-col">
+    <section id="view-chat" class="view px-4 overflow-hidden flex flex-col">
         
-        <!-- 【修复核心】pb-12：将整个面板向上顶起，确保录入框避开手机系统底栏 -->
-        <div class="flex flex-col items-center w-full h-full pt-16 pb-12 max-w-[680px] mx-auto relative justify-start">
+        <!-- 【修复核心】容器布局：pb-2 保持轻微间距。整个 div 将被 JS 动态计算高度以适应键盘 -->
+        <div id="chat-viewport-container" class="flex flex-col items-center w-full h-full pt-16 pb-2 max-w-[680px] mx-auto relative justify-start overflow-hidden">
             
             <!-- A. 顶部区域：Guna 仪表盘 & 标题 (使用 shrink-0 强制保留其高度，绝不被遮挡) -->
             <div class="w-full z-10 space-y-4 shrink-0 pb-4">
@@ -255,11 +251,11 @@
             <div class="chat-panel">
                 <!-- 消息流区域 -->
                 <div id="chat-flow" class="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto no-scrollbar scroll-smooth w-full">
-                    <!-- 消息会动态插入这里 -->
+                    <!-- 消息动态插入 -->
                 </div>
                 
                 <!-- 输入区：锁定在底部 -->
-                <div class="px-6 pt-4 pb-12 md:pb-8 border-t border-white/5 bg-black/40 w-full shrink-0">
+                <div class="px-6 pt-4 pb-8 md:pb-8 border-t border-white/5 bg-black/40 w-full shrink-0">
                     <!-- 打字指示器 -->
                     <div id="typing-indicator" class="text-[8px] text-cyan-500/40 mb-2 tracking-widest uppercase hidden">Titrating...</div>
     
@@ -363,6 +359,25 @@
         }
         initUser();
 
+        /**
+         * 【移动端适配脚本】实时监控视觉视口高度变化
+         * 解决键盘弹出时录入框精准定位及上方内容可见性问题
+         */
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const chatView = document.getElementById('view-chat');
+                if (chatView && chatView.classList.contains('active')) {
+                    const container = document.getElementById('chat-viewport-container');
+                    const height = window.visualViewport.height;
+                    // 动态调整主容器高度，减去顶部间隙
+                    container.style.height = `${height}px`;
+                    // 自动滚动到底部
+                    const flow = document.getElementById('chat-flow');
+                    if(flow) flow.scrollTop = flow.scrollHeight;
+                }
+            });
+        }
+
         function switchView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
@@ -380,6 +395,10 @@
                 document.getElementById('user-input').disabled = false;
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('user-input').focus();
+                // 切换到聊天页时手动触发一次高度校准
+                if(window.visualViewport) {
+                    document.getElementById('chat-viewport-container').style.height = `${window.visualViewport.height}px`;
+                }
             }
         }
 
